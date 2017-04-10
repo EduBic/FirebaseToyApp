@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    public static final String ANONYMOUS = "anonymous";
+//    public static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
     public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
 
@@ -76,16 +76,18 @@ public class MainActivity extends AppCompatActivity {
     private EditText mMessageEditText;
     private Button mSendButton;
 
-    private String mUsername;
+//    private String mUsername;
 
-    // fb database
-    private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference mDatabaseReference;
+    private IRepository mRepository;
+
+    //    // fb database
+//    private FirebaseDatabase mFirebaseDatabase;
+//    private DatabaseReference mDatabaseReference;
     private ChildEventListener mChildEventListener;
 
     // fb storage
-    private FirebaseStorage mFirebaseStorage;
-    private StorageReference mStorageReference;
+//    private FirebaseStorage mFirebaseStorage;
+//    private StorageReference mStorageReference;
 
     // fb authentication
     private FirebaseAuth mFirebaseAuth;
@@ -99,16 +101,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mUsername = ANONYMOUS;
+//        mUsername = ANONYMOUS;
+
+        // init Repository
+        mRepository = new Repository();
 
         // init firebase
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
+//        mFirebaseDatabase = FirebaseDatabase.getInstance();
+//        mDatabaseReference = mFirebaseDatabase.getReference().child("messages");
+
+//        mFirebaseStorage = FirebaseStorage.getInstance();
+//        mStorageReference = mFirebaseStorage.getReference().child("chat_photos");
+
         mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseStorage = FirebaseStorage.getInstance();
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
-        mDatabaseReference = mFirebaseDatabase.getReference().child("messages");
-        mStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -156,10 +163,10 @@ public class MainActivity extends AppCompatActivity {
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
-                FriendlyMessage friendlyMessage =
-                        new FriendlyMessage(mMessageEditText.getText().toString(), mUsername, null);
+                String textMsg = mMessageEditText.getText().toString();
 
-                mDatabaseReference.push().setValue(friendlyMessage);
+                //mDatabaseReference.push().setValue(friendlyMessage);
+                mRepository.pushMessage(textMsg);
 
                 // Clear input box
                 mMessageEditText.setText("");
@@ -174,11 +181,13 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseUser user = mFirebaseAuth.getCurrentUser();
                 if (user != null) {
                     Toast.makeText(MainActivity.this, "Sign in", Toast.LENGTH_SHORT).show();
-                    OnSignInInitialize(user.getDisplayName());
+                    mRepository.onSignInInitialize(user.getDisplayName());
                 }
                 else {
                     // user sign out -> use Firebase UI
-                    OnSignetOutCleanUp();
+                    mRepository.onSignetOutCleanUp();
+                    mMessageAdapter.clear();
+                    detachDatabaseReadListener();
 
                     startActivityForResult(
                             AuthUI.getInstance()
@@ -237,17 +246,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void OnSignInInitialize(String username) {
-        mUsername = username;
-        this.AttachDatabaseReadListener();
-    }
+//    private void OnSignInInitialize(String username) {
+//        mUsername = username;
+//        // this.AttachDatabaseReadListener();
+//    }
 
-    private void OnSignetOutCleanUp() {
-        mUsername = ANONYMOUS;
-        mMessageAdapter.clear();
-        this.DetachDatabaseReadListener();
-    }
+//    private void OnSignetOutCleanUp() {
+//        mUsername = ANONYMOUS;
+//        mMessageAdapter.clear();
+//        this.DetachDatabaseReadListener();
+//    }
 
+    // TODO: extract listener anonymous class
     private void AttachDatabaseReadListener() {
         if (mChildEventListener == null) {
             mChildEventListener = new ChildEventListener() {
@@ -281,13 +291,15 @@ public class MainActivity extends AppCompatActivity {
             };
 
             // listen changing in data from messages root
-            mDatabaseReference.addChildEventListener(mChildEventListener);
+            //mDatabaseReference.addChildEventListener(mChildEventListener);
+            mRepository.addChildEventListener(mChildEventListener);
         }
     }
 
-    private void DetachDatabaseReadListener() {
+    private void detachDatabaseReadListener() {
         if (mChildEventListener != null) {
-            mDatabaseReference.removeEventListener(mChildEventListener);
+            //mDatabaseReference.removeEventListener(mChildEventListener);
+            mRepository.removeChildEventListener(mChildEventListener);
         }
         mChildEventListener = null;
     }
@@ -316,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         // detach
         mFirebaseAuth.removeAuthStateListener(mAuthListener);
-        this.DetachDatabaseReadListener();
+        this.detachDatabaseReadListener();
         mMessageAdapter.clear();
     }
 
@@ -342,21 +354,25 @@ public class MainActivity extends AppCompatActivity {
         else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
             Uri selectImageUrl = data.getData();
 
-            // get reference to storage
-            StorageReference photRef = mStorageReference.child(selectImageUrl.getLastPathSegment());
+            mRepository.pushImage(selectImageUrl);
 
-            // upload file to fb
-            photRef.putFile(selectImageUrl)
-                    .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                    FriendlyMessage msg = new FriendlyMessage(null, mUsername, downloadUrl.toString());
-
-                    // give an unique id and push to database
-                    mDatabaseReference.push().setValue(msg);
-                }
-            });
+//            // get reference to storage
+//            StorageReference photRef = mStorageReference.child(selectImageUrl.getLastPathSegment());
+//
+//
+//            // upload file to fb in async
+//            photRef.putFile(selectImageUrl)
+//                    .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                @Override
+//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+//                    FriendlyMessage msg = new FriendlyMessage(null, mUsername, downloadUrl.toString());
+//
+//                    // give an unique id and push to database
+//                    //mDatabaseReference.push().setValue(msg);
+//                    mRepository.pushMessage(msg);
+//                }
+//            });
         }
     }
 
