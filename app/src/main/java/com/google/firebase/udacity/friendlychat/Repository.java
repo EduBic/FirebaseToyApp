@@ -52,12 +52,10 @@ public class Repository implements IRepository {
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     // fb util data
-    private String mUsername;
+    private String mUsername = ANONYMOUS;
 
 
     public Repository() {
-        mUsername = ANONYMOUS;
-
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference().child("messages");
 
