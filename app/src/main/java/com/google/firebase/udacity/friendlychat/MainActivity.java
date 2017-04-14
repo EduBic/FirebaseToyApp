@@ -15,30 +15,13 @@
  */
 package com.google.firebase.udacity.friendlychat;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -53,17 +36,15 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements IRepository.RepositoryListener {
 
     private static final String TAG = "MainActivity";
 
 //    public static final String ANONYMOUS = "anonymous";
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
-    public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
+//    public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
+//    public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
 
     // flag for return activity
     public static final int RC_SIGN_IN = 1;
@@ -93,8 +74,8 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
 //    private FirebaseAuth mFirebaseAuth;
 //    private FirebaseAuth.AuthStateListener mAuthListener;
 
-    // fb remote config
-    private FirebaseRemoteConfig mFirebaseRemoteConfig;
+//    // fb remote config
+//    private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
 
         // init Repository
         mRepository = new Repository();
-        mRepository.setListener(this);
+        mRepository.setViewListener(this);
 
         // init firebase
 //        mFirebaseDatabase = FirebaseDatabase.getInstance();
@@ -115,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
 //        mStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
 //        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+//        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
 
         // Initialize references to views
@@ -159,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
 
             public void afterTextChanged(Editable editable) { }
         });
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
+        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(Repository.DEFAULT_MSG_LENGTH_LIMIT)});
 
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
@@ -179,7 +160,6 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
                 // check if user is authenticated if not show screen of login
                 FirebaseUser user = mFirebaseAuth.getCurrentUser();
                 if (user != null) {
-                    // TODO: code line for MainActivity.
                     Toast.makeText(MainActivity.this, "Sign in", Toast.LENGTH_SHORT).show();
 
                     mRepository.onSignInInitialize(user.getDisplayName());
@@ -189,12 +169,10 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
                     // user sign out -> use Firebase UI
                     mRepository.onSignetOutCleanUp();
 
-                    // TODO: code line for MainActivity. We need that repository comunicate with MainActivity
                     mMessageAdapter.clear();
 
                     detachDatabaseReadListener();
 
-                    // TODO: code line for MainActivity. Only with the Context we can do this.
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
@@ -208,20 +186,20 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
             }
         };*/
 
-        FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(BuildConfig.DEBUG)
-                .build();
-        mFirebaseRemoteConfig.setConfigSettings(config);
-
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
-
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-
-        fetchConfig();
+//        FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
+//                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+//                .build();
+//        mFirebaseRemoteConfig.setConfigSettings(config);
+//
+//        Map<String, Object> defaultConfigMap = new HashMap<>();
+//        defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
+//
+//        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+//
+//        fetchConfig();
     }
 
-    private void fetchConfig() {
+    /*private void fetchConfig() {
         long cacheExpiration = 3600;
 
         if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
@@ -243,13 +221,13 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
                         applyRetrievedLengthLimit();
                     }
                 });
-    }
+    }*/
 
-    private void applyRetrievedLengthLimit() {
+/*    private void applyRetrievedLengthLimit() {
         Long friendly_msg_length = mFirebaseRemoteConfig.getLong(FRIENDLY_MSG_LENGTH_KEY);
         mMessageEditText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(friendly_msg_length.intValue())});
         Log.d(TAG, FRIENDLY_MSG_LENGTH_KEY + "=" + friendly_msg_length);
-    }
+    }*/
 
 
 //    private void OnSignInInitialize(String username) {
@@ -405,5 +383,10 @@ public class MainActivity extends AppCompatActivity implements IRepository.Repos
                                 AuthUI.GOOGLE_PROVIDER)
                         .build(),
                 RC_SIGN_IN);
+    }
+
+    @Override
+    public void updateMsgLength(int length) {
+        mMessageEditText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(length)});
     }
 }

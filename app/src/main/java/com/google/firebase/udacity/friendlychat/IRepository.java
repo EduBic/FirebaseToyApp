@@ -18,27 +18,21 @@ public interface IRepository {
         void notifyUser(String msg);
 
         void requestAuthentication();
+
+        void updateMsgLength(int length);
     }
 
-    void setListener(RepositoryListener listener);
 
-    void removeListener();
+    void setViewListener(RepositoryListener viewListener);
 
-    //void pushMessage(FriendlyMessage msg);
+    void removeViewListener();
+
 
     void pushMessage(String msg);
 
     void pushImage(Uri imageUri);
 
-    //void addChildEventListener(ChildEventListener listener);
-
-    //void removeChildEventListener(ChildEventListener listener);
-
     void attachAuthStateListener();
 
     void detachAuthStateListener();
-
-    //void onSignetOutCleanUp();
-
-    //void onSignInInitialize(String username);
 }
