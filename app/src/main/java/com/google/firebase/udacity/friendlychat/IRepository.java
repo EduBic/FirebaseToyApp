@@ -10,6 +10,20 @@ import android.net.Uri;
 
 public interface IRepository {
 
+    interface RepositoryListener {
+        void clearAllMessage();
+
+        void newMessage(FriendlyMessage msg);
+
+        void notifyUser(String msg);
+
+        void requestAuthentication();
+    }
+
+    void setListener(RepositoryListener listener);
+
+    void removeListener();
+
     void pushMessage(FriendlyMessage msg);
 
     void pushMessage(String msg);
@@ -19,6 +33,10 @@ public interface IRepository {
     void addChildEventListener(ChildEventListener listener);
 
     void removeChildEventListener(ChildEventListener listener);
+
+    void attachAuthStateListener();
+
+    void detachAuthStateListener();
 
     void onSignetOutCleanUp();
 

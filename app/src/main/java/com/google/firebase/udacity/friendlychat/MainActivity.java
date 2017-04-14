@@ -57,7 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IRepository.RepositoryListener {
 
     private static final String TAG = "MainActivity";
 
@@ -83,15 +83,15 @@ public class MainActivity extends AppCompatActivity {
     //    // fb database
 //    private FirebaseDatabase mFirebaseDatabase;
 //    private DatabaseReference mDatabaseReference;
-    private ChildEventListener mChildEventListener;
+    // private ChildEventListener mChildEventListener;
 
     // fb storage
 //    private FirebaseStorage mFirebaseStorage;
 //    private StorageReference mStorageReference;
 
-    // fb authentication
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+//    // fb authentication
+//    private FirebaseAuth mFirebaseAuth;
+//    private FirebaseAuth.AuthStateListener mAuthListener;
 
     // fb remote config
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         // init Repository
         mRepository = new Repository();
+        mRepository.setListener(this);
 
         // init firebase
 //        mFirebaseDatabase = FirebaseDatabase.getInstance();
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 //        mFirebaseStorage = FirebaseStorage.getInstance();
 //        mStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
-        mFirebaseAuth = FirebaseAuth.getInstance();
+//        mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
 
@@ -173,22 +174,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        /*mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 // check if user is authenticated if not show screen of login
                 FirebaseUser user = mFirebaseAuth.getCurrentUser();
                 if (user != null) {
+                    // TODO: code line for MainActivity.
                     Toast.makeText(MainActivity.this, "Sign in", Toast.LENGTH_SHORT).show();
+
                     mRepository.onSignInInitialize(user.getDisplayName());
+                    attachDatabaseReadListener();
                 }
                 else {
                     // user sign out -> use Firebase UI
                     mRepository.onSignetOutCleanUp();
+
+                    // TODO: code line for MainActivity. We need that repository comunicate with MainActivity
                     mMessageAdapter.clear();
+
                     detachDatabaseReadListener();
 
+                    // TODO: code line for MainActivity. Only with the Context we can do this.
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
@@ -200,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                             RC_SIGN_IN);
                 }
             }
-        };
+        };*/
 
         FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
                 .setDeveloperModeEnabled(BuildConfig.DEBUG)
@@ -257,8 +263,7 @@ public class MainActivity extends AppCompatActivity {
 //        this.DetachDatabaseReadListener();
 //    }
 
-    // TODO: extract listener anonymous class
-    private void AttachDatabaseReadListener() {
+    /*private void attachDatabaseReadListener() {
         if (mChildEventListener == null) {
             mChildEventListener = new ChildEventListener() {
                 @Override
@@ -302,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             mRepository.removeChildEventListener(mChildEventListener);
         }
         mChildEventListener = null;
-    }
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -326,17 +331,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // detach
-        mFirebaseAuth.removeAuthStateListener(mAuthListener);
-        this.detachDatabaseReadListener();
+        mRepository.detachAuthStateListener();
         mMessageAdapter.clear();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // attach
-        mFirebaseAuth.addAuthStateListener(mAuthListener);
+        mRepository.attachAuthStateListener();
     }
 
     @Override
@@ -377,4 +379,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void clearAllMessage() {
+        mMessageAdapter.clear();
+    }
+
+    @Override
+    public void newMessage(FriendlyMessage msg) {
+        mMessageAdapter.add(msg);
+    }
+
+    @Override
+    public void notifyUser(String msg) {
+        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void requestAuthentication() {
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setProviders(
+                                AuthUI.EMAIL_PROVIDER,
+                                AuthUI.GOOGLE_PROVIDER)
+                        .build(),
+                RC_SIGN_IN);
+    }
 }
