@@ -24,21 +24,21 @@ public interface IRepository {
 
     void removeListener();
 
-    void pushMessage(FriendlyMessage msg);
+    //void pushMessage(FriendlyMessage msg);
 
     void pushMessage(String msg);
 
     void pushImage(Uri imageUri);
 
-    void addChildEventListener(ChildEventListener listener);
+    //void addChildEventListener(ChildEventListener listener);
 
-    void removeChildEventListener(ChildEventListener listener);
+    //void removeChildEventListener(ChildEventListener listener);
 
     void attachAuthStateListener();
 
     void detachAuthStateListener();
 
-    void onSignetOutCleanUp();
+    //void onSignetOutCleanUp();
 
-    void onSignInInitialize(String username);
+    //void onSignInInitialize(String username);
 }

@@ -66,23 +66,20 @@ public class Repository implements IRepository {
                 FirebaseUser user = mFirebaseAuth.getCurrentUser();
                 if (user != null) {
                     listener.notifyUser("Sign in");
-
                     onSignInInitialize(user.getDisplayName());
-                    attachDatabaseReadListener();
                 }
-                else {
-                    // user sign out
+                else { // user sign out
                     onSignetOutCleanUp();
-
                     listener.clearAllMessage();
-
-                    detachDatabaseReadListener();
-
-                    // -> use Firebase UI
-                    listener.requestAuthentication();
+                    listener.requestAuthentication(); // -> use Firebase UI
                 }
             }
         };
+    }
+
+    private void onSignInInitialize(String username) {
+        mUsername = username;
+        attachDatabaseReadListener();
     }
 
     private void attachDatabaseReadListener() {
@@ -123,6 +120,17 @@ public class Repository implements IRepository {
         }
     }
 
+    private void addChildEventListener(ChildEventListener listener) {
+        // listen changing in data from messages root
+        mDatabaseReference.addChildEventListener(listener);
+    }
+
+
+    private void onSignetOutCleanUp() {
+        mUsername = ANONYMOUS;
+        detachAuthStateListener();
+    }
+
     private void detachDatabaseReadListener() {
         if (mChildEventListener != null) {
             //mDatabaseReference.removeEventListener(mChildEventListener);
@@ -130,6 +138,11 @@ public class Repository implements IRepository {
         }
         mChildEventListener = null;
     }
+
+    private void removeChildEventListener(ChildEventListener listener) {
+        mDatabaseReference.removeEventListener(listener);
+    }
+
 
     @Override
     public void setListener(RepositoryListener listener) {
@@ -141,8 +154,8 @@ public class Repository implements IRepository {
         this.listener = null;
     }
 
-    @Override
-    public void pushMessage(FriendlyMessage msg) {
+
+    private void pushMessage(FriendlyMessage msg) {
         if (mDatabaseReference != null) {
             mDatabaseReference.push().setValue(msg);
         }
@@ -177,17 +190,6 @@ public class Repository implements IRepository {
     }
 
     @Override
-    public void addChildEventListener(ChildEventListener listener) {
-        // listen changing in data from messages root
-        mDatabaseReference.addChildEventListener(listener);
-    }
-
-    @Override
-    public void removeChildEventListener(ChildEventListener listener) {
-        mDatabaseReference.removeEventListener(listener);
-    }
-
-    @Override
     public void attachAuthStateListener() {
         mFirebaseAuth.addAuthStateListener(mAuthListener);
     }
@@ -196,16 +198,5 @@ public class Repository implements IRepository {
     public void detachAuthStateListener() {
         mFirebaseAuth.removeAuthStateListener(mAuthListener);
         this.detachDatabaseReadListener();
-    }
-
-    @Override
-    public void onSignInInitialize(String username) {
-        mUsername = username;
-        attachDatabaseReadListener();
-    }
-
-    @Override
-    public void onSignetOutCleanUp() {
-        mUsername = ANONYMOUS;
     }
 }
