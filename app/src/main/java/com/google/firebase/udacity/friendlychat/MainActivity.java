@@ -15,39 +15,16 @@
  */
 package com.google.firebase.udacity.friendlychat;
 
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.Toast;
-
-import com.firebase.ui.auth.AuthUI;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private IRepository mRepository;
+    private Repository mRepository;
+    private IPresenter mPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ChatFragment chatFragment =
-                (ChatFragment) getSupportFragmentManager().findFragmentByTag(ChatFragment.TAG);
+                (ChatFragment) getSupportFragmentManager().findFragmentById(R.id.content_frag);
 
         if (chatFragment == null) {
             chatFragment = ChatFragment.newInstance();
@@ -64,9 +41,10 @@ public class MainActivity extends AppCompatActivity {
             transaction.commit();
         }
 
-        // init Repository
         mRepository = new Repository();
-        mRepository.setViewListener(chatFragment);
-        chatFragment.setRepository(mRepository);
+        //mRepository.setViewListener(chatFragment);
+        //chatFragment.setRepository(mRepository);
+
+        mPresenter = new ChatPresenter(mRepository, chatFragment);
     }
 }

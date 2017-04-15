@@ -10,29 +10,15 @@ import android.net.Uri;
 
 public interface IRepository {
 
-    interface RepositoryListener {
-        void clearAllMessage();
+    //void setViewListener(IView viewListener);
 
-        void newMessage(FriendlyMessage msg);
+    //void removeViewListener();
 
-        void notifyUser(String msg);
+    //void pushMessage(String msg);
 
-        void requestAuthentication();
+    //void pushImage(Uri imageUri);
 
-        void updateMsgLength(int length);
-    }
+    //void attachAuthStateListener();
 
-
-    void setViewListener(RepositoryListener viewListener);
-
-    void removeViewListener();
-
-
-    void pushMessage(String msg);
-
-    void pushImage(Uri imageUri);
-
-    void attachAuthStateListener();
-
-    void detachAuthStateListener();
+    //void detachAuthStateListener();
 }

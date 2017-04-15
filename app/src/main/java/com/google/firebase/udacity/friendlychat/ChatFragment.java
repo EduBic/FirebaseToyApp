@@ -1,6 +1,5 @@
 package com.google.firebase.udacity.friendlychat;
 
-import android.app.Activity;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.content.Context;
@@ -33,7 +32,7 @@ import java.util.List;
  * Created by Eduard on 14/04/2017.
  */
 
-public class ChatFragment extends Fragment implements IRepository.RepositoryListener {
+public class ChatFragment extends Fragment implements IView {
 
     public static final String TAG = "ChatFragment";
 
@@ -47,13 +46,23 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
     private EditText mMessageEditText;
     private Button mSendButton;
 
-    private IRepository mRepository;
+    //TODO remove
+    //private IRepository mRepository;
+    private IPresenter mPresenter;
 
     public ChatFragment() { }
 
     public static ChatFragment newInstance() {
         return new ChatFragment();
     }
+
+    @Override
+    public void setPresenter(@NonNull IPresenter presenter) {
+        this.mPresenter = presenter;
+    }
+
+    //TODO remove
+    //public void setRepository(@NonNull IRepository repository) {this.mRepository = repository; }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,14 +76,18 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
     @Override
     public void onPause() {
         super.onPause();
-        mRepository.detachAuthStateListener();
+        //TODO remove
+        //mRepository.detachAuthStateListener();
+        mPresenter.pause();
         mMessageAdapter.clear();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mRepository.attachAuthStateListener();
+        //TODO remove
+        //mRepository.attachAuthStateListener();
+        mPresenter.start();
     }
 
     @Nullable
@@ -121,7 +134,7 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
 
             public void afterTextChanged(Editable editable) { }
         });
-        //TODO: remove reference to Repository
+        //TODO: remove static reference to Repository
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(Repository.DEFAULT_MSG_LENGTH_LIMIT)});
 
         // Send button sends a message and clears the EditText
@@ -129,7 +142,9 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
             @Override public void onClick(View view) {
                 String textMsg = mMessageEditText.getText().toString();
 
-                mRepository.pushMessage(textMsg);
+                //TODO remove
+                //mRepository.pushMessage(textMsg);
+                mPresenter.addNewMessage(textMsg);
 
                 // Clear input box
                 mMessageEditText.setText("");
@@ -155,12 +170,10 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
         }
         else if (requestCode == RC_PHOTO_PICKER && resultCode == MainActivity.RESULT_OK) {
             Uri selectImageUrl = data.getData();
-            mRepository.pushImage(selectImageUrl);
+            // TODO: remove
+            //mRepository.pushImage(selectImageUrl);
+            mPresenter.addNewMessage(selectImageUrl);
         }
-    }
-
-    public void setRepository(@NonNull IRepository repo) {
-        this.mRepository = repo;
     }
 
     @Override
@@ -180,7 +193,7 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
         }
     }
 
-    // Callbacks from Repository
+    // IView methods
     @Override
     public void clearAllMessage() {
         mMessageAdapter.clear();
