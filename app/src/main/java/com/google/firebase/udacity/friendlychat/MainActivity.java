@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private Repository mRepository;
+    private IRepository mRepository;
     private IPresenter mPresenter;
 
     @Override

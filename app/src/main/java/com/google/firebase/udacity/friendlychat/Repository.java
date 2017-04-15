@@ -28,37 +28,11 @@ import java.util.Map;
  */
 public class Repository implements IRepository {
 
-    /*public interface Callback {
-        void clearAllMessage();
-
-        void newMessage(FriendlyMessage msg);
-
-        void notifyUser(String msg);
-
-        void requestAuthentication();
-
-        void updateMsgLength(int length);
-
-        void setPresenter(@NonNull IPresenter presenter);
-    }*/
-
-    public interface RepositoryListener {
-        void onAuthentication(boolean success);
-
-        void onFetchConfigFinish(int lengthMessage);    //TODO: make a data object
-
-        void onDatabaseUpdate(FriendlyMessage msg);
-    }
-
-
     public static final String TAG = "Repository";
 
-    private static final String DEFAULT_USERNAME = "anonymous";
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
     private static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
 
-    //private IView viewListener;
-    //TODO use a list of listeners
+    //TODO: use a list of listeners
     private RepositoryListener mListener;
 
     // fb database
@@ -97,29 +71,35 @@ public class Repository implements IRepository {
 //        this.initRemoteConfig();
     }
 
+    @Override
+    public void addListener(RepositoryListener listener) {
+        mListener = listener;
+        this.initAuthListener();
+        this.initRemoteConfig();
+    }
+
+
     private void initAuthListener() {
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                // check if user is authenticated if not show screen of login
-                FirebaseUser user = mFirebaseAuth.getCurrentUser();
-                if (user != null) {
-                    //TODO: only use listener
-                    if(mListener != null)
+        if (mListener != null) {
+            mAuthListener = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    // check if user is authenticated if not show screen of login
+                    FirebaseUser user = mFirebaseAuth.getCurrentUser();
+                    if (user != null) {
                         mListener.onAuthentication(true);
-                    //viewListener.notifyUser("Sign in");
-                    onSignInInitialize(user.getDisplayName());
-                }
-                else { // user sign out
-                    onSignetOutCleanUp();
-                    //TODO: only use listener
-                    if (mListener != null)
+                        onSignInInitialize(user.getDisplayName());
+                    }
+                    else { // user sign out
+                        onSignetOutCleanUp();
                         mListener.onAuthentication(false);
-                    //viewListener.clearAllMessage();
-                    //viewListener.requestAuthentication(); // -> use Firebase UI
+                    }
                 }
-            }
-        };
+            };
+        }
+        else {
+            Log.w("InitAuthListener", "No listener of repository");
+        }
     }
 
     private void onSignInInitialize(String username) {
@@ -135,11 +115,10 @@ public class Repository implements IRepository {
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     // match the field get in json object (DataSnapshot)
                     FriendlyMessage newFriendlyMsg = dataSnapshot.getValue(FriendlyMessage.class);
-                    //TODO: use listener
+
                     if (mListener != null) {
                         mListener.onDatabaseUpdate(newFriendlyMsg);
                     }
-                    //viewListener.newMessage(newFriendlyMsg);
                 }
 
                 @Override
@@ -182,17 +161,22 @@ public class Repository implements IRepository {
 
 
     private void initRemoteConfig() {
-        FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(BuildConfig.DEBUG)
-                .build();
-        mFirebaseRemoteConfig.setConfigSettings(config);
+        if (mListener != null) {
+            FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
+                    .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                    .build();
+            mFirebaseRemoteConfig.setConfigSettings(config);
 
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
+            Map<String, Object> defaultConfigMap = new HashMap<>();
+            defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
 
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+            mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
 
-        fetchConfig();
+            fetchConfig();
+        }
+        else {
+            Log.w("InitRemoteConfig", "No listener of repository");
+        }
     }
 
     private void fetchConfig() {
@@ -221,34 +205,13 @@ public class Repository implements IRepository {
 
     private void applyRetrievedLengthLimit() {
         Long friendlyMsgLength = mFirebaseRemoteConfig.getLong(FRIENDLY_MSG_LENGTH_KEY);
-        //TODO: use callback
-        if (mListener != null) {
-            mListener.onFetchConfigFinish(friendlyMsgLength.intValue());
-        }
-        //viewListener.updateMsgLength(friendlyMsgLength.intValue());
+        mListener.onFetchConfigFinish(friendlyMsgLength.intValue());
+
         Log.d(TAG, FRIENDLY_MSG_LENGTH_KEY + "=" + friendlyMsgLength);
     }
 
-    /*@Override
-    //TODO: remove this, use callback
-    public void setViewListener(IView viewListener) {
-        this.viewListener = viewListener;
-    }
 
     @Override
-    //TODO: remove this, use callback
-    public void removeViewListener() {
-        this.viewListener = null;
-    }*/
-
-    public void addListener(RepositoryListener listener) {
-        mListener = listener;
-        this.initAuthListener();
-        this.initRemoteConfig();
-    }
-
-
-    //@Override
     public void pushMessage(String textMsg) {
         FriendlyMessage friendlyMessage =
                 new FriendlyMessage(textMsg, mUsername, null);
@@ -256,7 +219,7 @@ public class Repository implements IRepository {
         this.pushMessage(friendlyMessage);
     }
 
-    //@Override
+    @Override
     public void pushImage(Uri imageUri) {
         // get reference to storage
         StorageReference photoRef = mStorageReference.child(imageUri.getLastPathSegment());
@@ -283,12 +246,12 @@ public class Repository implements IRepository {
     }
 
 
-    //@Override
+    @Override
     public void attachAuthStateListener() {
         mFirebaseAuth.addAuthStateListener(mAuthListener);
     }
 
-    //@Override
+    @Override
     public void detachAuthStateListener() {
         if (mAuthListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthListener);

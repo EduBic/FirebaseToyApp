@@ -8,11 +8,11 @@ import android.net.Uri;
 
 public class ChatPresenter implements IPresenter, Repository.RepositoryListener {
 
-    private Repository mRepository;
+    private IRepository mRepository;
 
     private IView mView;
 
-    public ChatPresenter(Repository repository, IView view) {
+    public ChatPresenter(IRepository repository, IView view) {
         mRepository = repository;
         mView = view;
 
@@ -42,7 +42,7 @@ public class ChatPresenter implements IPresenter, Repository.RepositoryListener 
         mRepository.pushImage(imagePath);
     }
 
-    // listener repository
+    // call from repository
     @Override
     public void onAuthentication(boolean success) {
         if (success) {

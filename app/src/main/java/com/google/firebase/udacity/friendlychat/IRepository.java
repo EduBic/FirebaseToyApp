@@ -10,15 +10,24 @@ import android.net.Uri;
 
 public interface IRepository {
 
-    //void setViewListener(IView viewListener);
+    String DEFAULT_USERNAME = "anonymous";
+    int DEFAULT_MSG_LENGTH_LIMIT = 1000;
 
-    //void removeViewListener();
+    interface RepositoryListener {
+        void onAuthentication(boolean success);
 
-    //void pushMessage(String msg);
+        void onFetchConfigFinish(int lengthMessage);    //TODO: make a data object
 
-    //void pushImage(Uri imageUri);
+        void onDatabaseUpdate(FriendlyMessage msg);
+    }
 
-    //void attachAuthStateListener();
+    void pushMessage(String msg);
 
-    //void detachAuthStateListener();
+    void pushImage(Uri imageUri);
+
+    void addListener(RepositoryListener listener);
+
+    void attachAuthStateListener();
+
+    void detachAuthStateListener();
 }
