@@ -10,7 +10,7 @@ In this repository i try to give a possible solution for this problem. I have fo
 
 Here the big refactorings done:
 - Firebase features extract from MainActivity to Repository.
-- UI elements extract from MainActivity to ChatFragment.
+- UI elements extract from MainActivity to ChatFragment. https://github.com/EduBic/FirebaseToyApp/wiki/Extract-Fragment-from-Activity
 - Implement MVP.
 
 ## Setup
