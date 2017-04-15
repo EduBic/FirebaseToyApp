@@ -1,36 +1,22 @@
-/**
- * Copyright Google Inc. All Rights Reserved.
- * <p/>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.google.firebase.udacity.friendlychat;
 
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
-import android.content.Intent;
+import android.app.Activity;
 import android.net.Uri;
+import android.support.v4.app.Fragment;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -43,57 +29,67 @@ import com.firebase.ui.auth.AuthUI;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Created by Eduard on 14/04/2017.
+ */
 
-    private static final String TAG = "MainActivity";
+public class ChatFragment extends Fragment implements IRepository.RepositoryListener {
 
-    // flag for return activity
+    public static final String TAG = "ChatFragment";
+
     public static final int RC_SIGN_IN = 1;
     private static final int RC_PHOTO_PICKER = 2;
 
-    /*private ListView mMessageListView;
+    private ListView mMessageListView;
     private MessageAdapter mMessageAdapter;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
-    private Button mSendButton;*/
+    private Button mSendButton;
 
     private IRepository mRepository;
 
+    public ChatFragment() { }
+
+    public static ChatFragment newInstance() {
+        return new ChatFragment();
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO: remove UI from MainActivity
-        setContentView(R.layout.activity_main);
 
-
-        ChatFragment chatFragment =
-                (ChatFragment) getSupportFragmentManager().findFragmentByTag(ChatFragment.TAG);
-
-        if (chatFragment == null) {
-            chatFragment = ChatFragment.newInstance();
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.add(R.id.content_frag, chatFragment);
-            transaction.commit();
-        }
-
-        // init Repository
-        mRepository = new Repository();
-        mRepository.setViewListener(chatFragment);
-        chatFragment.setRepository(mRepository);
-
-        /*//TODO: remove UI elements
-        // Initialize references to views
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mMessageListView = (ListView) findViewById(R.id.messageListView);
-        mPhotoPickerButton = (ImageButton) findViewById(R.id.photoPickerButton);
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mSendButton = (Button) findViewById(R.id.sendButton);
-
-        // Initialize message ListView and its adapter
         List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
+        Context context = getActivity().getApplicationContext();
+        mMessageAdapter = new MessageAdapter(context, R.layout.item_message, friendlyMessages);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mRepository.detachAuthStateListener();
+        mMessageAdapter.clear();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mRepository.attachAuthStateListener();
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+
+        View root = inflater.inflate(R.layout.chat_frag, container, false);
+
+        // Initialize references to views
+        mProgressBar = (ProgressBar) root.findViewById(R.id.progressBar);
+        mMessageListView = (ListView) root.findViewById(R.id.messageListView);
+        mPhotoPickerButton = (ImageButton) root.findViewById(R.id.photoPickerButton);
+        mMessageEditText = (EditText) root.findViewById(R.id.messageEditText);
+        mSendButton = (Button) root.findViewById(R.id.sendButton);
+
         mMessageListView.setAdapter(mMessageAdapter);
 
         // Initialize progress bar
@@ -113,10 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Enable Send button when there's text to send
         mMessageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
 
-            @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setEnabled(true);
@@ -125,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            @Override
             public void afterTextChanged(Editable editable) { }
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(Repository.DEFAULT_MSG_LENGTH_LIMIT)});
@@ -140,14 +133,38 @@ public class MainActivity extends AppCompatActivity {
                 // Clear input box
                 mMessageEditText.setText("");
             }
-        });*/
+        });
+
+        setHasOptionsMenu(true);
+
+        return root;
     }
-/*
+
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode == MainActivity.RESULT_OK) {
+                Toast.makeText(getActivity(), "Signed in", Toast.LENGTH_SHORT).show();
+            } else if (resultCode == MainActivity.RESULT_CANCELED) {
+                Toast.makeText(getActivity(), "Signed in cancel", Toast.LENGTH_SHORT).show();
+                getActivity().finish();
+            }
+        }
+        else if (requestCode == RC_PHOTO_PICKER && resultCode == MainActivity.RESULT_OK) {
+            Uri selectImageUrl = data.getData();
+            mRepository.pushImage(selectImageUrl);
+        }
+    }
+
+    public void setRepository(@NonNull IRepository repo) {
+        this.mRepository = repo;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main_menu, menu);
-        return true;
     }
 
     @Override
@@ -155,49 +172,15 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.sign_out_menu:
                 // sign out for firebase authentication
-                AuthUI.getInstance().signOut(this);
+                AuthUI.getInstance().signOut(getActivity());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }*/
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // TODO: move to fragment
-        /*mRepository.detachAuthStateListener();
-        mMessageAdapter.clear();*/
     }
 
+    // Callbacks from Repository
     @Override
-    protected void onResume() {
-        super.onResume();
-        // TODO: move to fragment
-        //mRepository.attachAuthStateListener();
-    }
-
-    /*@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Signed in", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Signed in cancel", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-        else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
-            Uri selectImageUrl = data.getData();
-            mRepository.pushImage(selectImageUrl);
-        }
-    }*/
-
-
-    // TODO: remove implements RepositoryListener in MainActivity
-    /*@Override
     public void clearAllMessage() {
         mMessageAdapter.clear();
     }
@@ -209,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void notifyUser(String msg) {
-        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -228,5 +211,5 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void updateMsgLength(int length) {
         mMessageEditText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(length)});
-    }*/
+    }
 }

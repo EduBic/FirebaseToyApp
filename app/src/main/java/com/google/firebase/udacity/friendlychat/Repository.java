@@ -72,7 +72,8 @@ public class Repository implements IRepository {
 
     private void initAuthListener() {
         mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 // check if user is authenticated if not show screen of login
                 FirebaseUser user = mFirebaseAuth.getCurrentUser();
                 if (user != null) {
@@ -216,6 +217,7 @@ public class Repository implements IRepository {
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // TODO: this is never called, why?
                         Uri downloadUrl = taskSnapshot.getDownloadUrl();
                         FriendlyMessage msg = new FriendlyMessage(null, mUsername, downloadUrl.toString());
 
@@ -240,7 +242,9 @@ public class Repository implements IRepository {
 
     @Override
     public void detachAuthStateListener() {
-        mFirebaseAuth.removeAuthStateListener(mAuthListener);
+        if (mAuthListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthListener);
+        }
         this.detachDatabaseReadListener();
     }
 }
