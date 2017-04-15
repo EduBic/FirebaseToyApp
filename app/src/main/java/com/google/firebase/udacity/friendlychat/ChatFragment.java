@@ -40,15 +40,14 @@ public class ChatFragment extends Fragment implements IView {
     private static final int RC_PHOTO_PICKER = 2;
 
     private ListView mMessageListView;
-    private MessageAdapter mMessageAdapter;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
     private Button mSendButton;
+    private MessageAdapter mMessageAdapter;
 
-    //TODO remove
-    //private IRepository mRepository;
     private IPresenter mPresenter;
+
 
     public ChatFragment() { }
 
@@ -61,8 +60,6 @@ public class ChatFragment extends Fragment implements IView {
         this.mPresenter = presenter;
     }
 
-    //TODO remove
-    //public void setRepository(@NonNull IRepository repository) {this.mRepository = repository; }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,8 +73,6 @@ public class ChatFragment extends Fragment implements IView {
     @Override
     public void onPause() {
         super.onPause();
-        //TODO remove
-        //mRepository.detachAuthStateListener();
         mPresenter.pause();
         mMessageAdapter.clear();
     }
@@ -85,8 +80,6 @@ public class ChatFragment extends Fragment implements IView {
     @Override
     public void onResume() {
         super.onResume();
-        //TODO remove
-        //mRepository.attachAuthStateListener();
         mPresenter.start();
     }
 
@@ -134,18 +127,13 @@ public class ChatFragment extends Fragment implements IView {
 
             public void afterTextChanged(Editable editable) { }
         });
-        //TODO: remove static reference to Repository
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(IRepository.DEFAULT_MSG_LENGTH_LIMIT)});
 
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 String textMsg = mMessageEditText.getText().toString();
-
-                //TODO remove
-                //mRepository.pushMessage(textMsg);
                 mPresenter.addNewMessage(textMsg);
-
                 // Clear input box
                 mMessageEditText.setText("");
             }
@@ -170,8 +158,6 @@ public class ChatFragment extends Fragment implements IView {
         }
         else if (requestCode == RC_PHOTO_PICKER && resultCode == MainActivity.RESULT_OK) {
             Uri selectImageUrl = data.getData();
-            // TODO: remove
-            //mRepository.pushImage(selectImageUrl);
             mPresenter.addNewMessage(selectImageUrl);
         }
     }
