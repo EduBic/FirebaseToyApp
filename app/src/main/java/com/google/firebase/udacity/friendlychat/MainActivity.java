@@ -47,6 +47,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
+<<<<<<< HEAD
+=======
+    public static final String ANONYMOUS = "anonymous";
+    public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
+    public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
+
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
     // flag for return activity
     public static final int RC_SIGN_IN = 1;
     private static final int RC_PHOTO_PICKER = 2;
@@ -56,10 +63,32 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
+<<<<<<< HEAD
     private Button mSendButton;*/
 
     private IRepository mRepository;
 
+=======
+    private Button mSendButton;
+
+    private String mUsername;
+
+    // fb database
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mDatabaseReference;
+    private ChildEventListener mChildEventListener;
+
+    // fb storage
+    private FirebaseStorage mFirebaseStorage;
+    private StorageReference mStorageReference;
+
+    // fb authentication
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+
+    // fb remote config
+    private FirebaseRemoteConfig mFirebaseRemoteConfig;
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         // TODO: remove UI from MainActivity
         setContentView(R.layout.activity_main);
 
+<<<<<<< HEAD
 
         ChatFragment chatFragment =
                 (ChatFragment) getSupportFragmentManager().findFragmentByTag(ChatFragment.TAG);
@@ -82,6 +112,18 @@ public class MainActivity extends AppCompatActivity {
         mRepository = new Repository();
         mRepository.setViewListener(chatFragment);
         chatFragment.setRepository(mRepository);
+=======
+        mUsername = ANONYMOUS;
+
+        // init firebase
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseStorage = FirebaseStorage.getInstance();
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        mDatabaseReference = mFirebaseDatabase.getReference().child("messages");
+        mStorageReference = mFirebaseStorage.getReference().child("chat_photos");
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
 
         /*//TODO: remove UI elements
         // Initialize references to views
@@ -133,14 +175,148 @@ public class MainActivity extends AppCompatActivity {
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
-                String textMsg = mMessageEditText.getText().toString();
+                FriendlyMessage friendlyMessage =
+                        new FriendlyMessage(mMessageEditText.getText().toString(), mUsername, null);
 
+<<<<<<< HEAD
                 mRepository.pushMessage(textMsg);
+=======
+                mDatabaseReference.push().setValue(friendlyMessage);
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
 
                 // Clear input box
                 mMessageEditText.setText("");
             }
+<<<<<<< HEAD
         });*/
+=======
+        });
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                // check if user is authenticated if not show screen of login
+                FirebaseUser user = mFirebaseAuth.getCurrentUser();
+                if (user != null) {
+                    Toast.makeText(MainActivity.this, "Sign in", Toast.LENGTH_SHORT).show();
+                    OnSignInInitialize(user.getDisplayName());
+                }
+                else {
+                    // user sign out -> use Firebase UI
+                    OnSignetOutCleanUp();
+
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setIsSmartLockEnabled(false)
+                                    .setProviders(
+                                        AuthUI.EMAIL_PROVIDER,
+                                        AuthUI.GOOGLE_PROVIDER)
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+            }
+        };
+
+        FirebaseRemoteConfigSettings config = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+        mFirebaseRemoteConfig.setConfigSettings(config);
+
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
+
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
+        fetchConfig();
+    }
+
+    private void fetchConfig() {
+        long cacheExpiration = 3600;
+
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            cacheExpiration = 0;
+        }
+
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        mFirebaseRemoteConfig.activateFetched();
+                        applyRetrievedLengthLimit();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error fetching config", e);
+                        applyRetrievedLengthLimit();
+                    }
+                });
+    }
+
+    private void applyRetrievedLengthLimit() {
+        Long friendly_msg_length = mFirebaseRemoteConfig.getLong(FRIENDLY_MSG_LENGTH_KEY);
+        mMessageEditText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(friendly_msg_length.intValue())});
+        Log.d(TAG, FRIENDLY_MSG_LENGTH_KEY + "=" + friendly_msg_length);
+    }
+
+
+    private void OnSignInInitialize(String username) {
+        mUsername = username;
+        this.AttachDatabaseReadListener();
+    }
+
+    private void OnSignetOutCleanUp() {
+        mUsername = ANONYMOUS;
+        mMessageAdapter.clear();
+        this.DetachDatabaseReadListener();
+    }
+
+    private void AttachDatabaseReadListener() {
+        if (mChildEventListener == null) {
+            mChildEventListener = new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    // match the field get in json object (DataSnapshot)
+                    FriendlyMessage newFriendlyMsg = dataSnapshot.getValue(FriendlyMessage.class);
+                    // update view with adapter
+                    mMessageAdapter.add(newFriendlyMsg);
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+
+            // listen changing in data from messages root
+            mDatabaseReference.addChildEventListener(mChildEventListener);
+        }
+    }
+
+    private void DetachDatabaseReadListener() {
+        if (mChildEventListener != null) {
+            mDatabaseReference.removeEventListener(mChildEventListener);
+        }
+        mChildEventListener = null;
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
     }
 /*
     @Override
@@ -165,9 +341,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+<<<<<<< HEAD
         // TODO: move to fragment
         /*mRepository.detachAuthStateListener();
         mMessageAdapter.clear();*/
+=======
+        // detach
+        mFirebaseAuth.removeAuthStateListener(mAuthListener);
+        this.DetachDatabaseReadListener();
+        mMessageAdapter.clear();
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
     }
 
     @Override
@@ -191,7 +374,26 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
             Uri selectImageUrl = data.getData();
+<<<<<<< HEAD
             mRepository.pushImage(selectImageUrl);
+=======
+
+            // get reference to storage
+            StorageReference photRef = mStorageReference.child(selectImageUrl.getLastPathSegment());
+
+            // upload file to fb
+            photRef.putFile(selectImageUrl)
+                    .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                    FriendlyMessage msg = new FriendlyMessage(null, mUsername, downloadUrl.toString());
+
+                    // give an unique id and push to database
+                    mDatabaseReference.push().setValue(msg);
+                }
+            });
+>>>>>>> parent of 899a4de... Extract firebase database and storage from MainActivity
         }
     }*/
 
