@@ -47,26 +47,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    // flag for return activity
-    public static final int RC_SIGN_IN = 1;
-    private static final int RC_PHOTO_PICKER = 2;
-
-    /*private ListView mMessageListView;
-    private MessageAdapter mMessageAdapter;
-    private ProgressBar mProgressBar;
-    private ImageButton mPhotoPickerButton;
-    private EditText mMessageEditText;
-    private Button mSendButton;*/
-
     private IRepository mRepository;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO: remove UI from MainActivity
         setContentView(R.layout.activity_main);
-
 
         ChatFragment chatFragment =
                 (ChatFragment) getSupportFragmentManager().findFragmentByTag(ChatFragment.TAG);
@@ -82,151 +68,5 @@ public class MainActivity extends AppCompatActivity {
         mRepository = new Repository();
         mRepository.setViewListener(chatFragment);
         chatFragment.setRepository(mRepository);
-
-        /*//TODO: remove UI elements
-        // Initialize references to views
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mMessageListView = (ListView) findViewById(R.id.messageListView);
-        mPhotoPickerButton = (ImageButton) findViewById(R.id.photoPickerButton);
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mSendButton = (Button) findViewById(R.id.sendButton);
-
-        // Initialize message ListView and its adapter
-        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
-        mMessageListView.setAdapter(mMessageAdapter);
-
-        // Initialize progress bar
-        mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-
-        // ImagePickerButton shows an image picker to upload a image for a message
-        mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/jpeg");
-                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(
-                        Intent.createChooser(intent, "Complete action using"),
-                        RC_PHOTO_PICKER);
-            }
-        });
-
-        // Enable Send button when there's text to send
-        mMessageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.toString().trim().length() > 0) {
-                    mSendButton.setEnabled(true);
-                } else {
-                    mSendButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) { }
-        });
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(Repository.DEFAULT_MSG_LENGTH_LIMIT)});
-
-        // Send button sends a message and clears the EditText
-        mSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) {
-                String textMsg = mMessageEditText.getText().toString();
-
-                mRepository.pushMessage(textMsg);
-
-                // Clear input box
-                mMessageEditText.setText("");
-            }
-        });*/
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.sign_out_menu:
-                // sign out for firebase authentication
-                AuthUI.getInstance().signOut(this);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }*/
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // TODO: move to fragment
-        /*mRepository.detachAuthStateListener();
-        mMessageAdapter.clear();*/
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // TODO: move to fragment
-        //mRepository.attachAuthStateListener();
-    }
-
-    /*@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Signed in", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Signed in cancel", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-        else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
-            Uri selectImageUrl = data.getData();
-            mRepository.pushImage(selectImageUrl);
-        }
-    }*/
-
-
-    // TODO: remove implements RepositoryListener in MainActivity
-    /*@Override
-    public void clearAllMessage() {
-        mMessageAdapter.clear();
-    }
-
-    @Override
-    public void newMessage(FriendlyMessage msg) {
-        mMessageAdapter.add(msg);
-    }
-
-    @Override
-    public void notifyUser(String msg) {
-        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void requestAuthentication() {
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false)
-                        .setProviders(
-                                AuthUI.EMAIL_PROVIDER,
-                                AuthUI.GOOGLE_PROVIDER)
-                        .build(),
-                RC_SIGN_IN);
-    }
-
-    @Override
-    public void updateMsgLength(int length) {
-        mMessageEditText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(length)});
-    }*/
 }

@@ -29,9 +29,10 @@ import java.util.Map;
 public class Repository implements IRepository {
 
     public static final String TAG = "Repository";
-    public static final String ANONYMOUS = "anonymous";
+
+    private static final String DEFAULT_USERNAME = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
-    public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
+    private static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
 
     private RepositoryListener viewListener;
 
@@ -52,7 +53,7 @@ public class Repository implements IRepository {
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     // fb util data
-    private String mUsername = ANONYMOUS;
+    private String mUsername = DEFAULT_USERNAME;
 
 
     public Repository() {
@@ -96,6 +97,7 @@ public class Repository implements IRepository {
 
     private void attachDatabaseReadListener() {
         if (mChildEventListener == null) {
+            // TODO: extract Listener to class
             mChildEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -132,7 +134,7 @@ public class Repository implements IRepository {
     }
 
     private void onSignetOutCleanUp() {
-        mUsername = ANONYMOUS;
+        mUsername = DEFAULT_USERNAME;
         detachAuthStateListener();
     }
 
@@ -212,7 +214,8 @@ public class Repository implements IRepository {
         // get reference to storage
         StorageReference photoRef = mStorageReference.child(imageUri.getLastPathSegment());
 
-        // upload file to fb N.B. this part is syncronous TODO: make it async
+        // upload file to fb N.B. this part is syncronous
+        // TODO: better use executor for the listener?
         photoRef.putFile(imageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -222,7 +225,6 @@ public class Repository implements IRepository {
                         FriendlyMessage msg = new FriendlyMessage(null, mUsername, downloadUrl.toString());
 
                         // give an unique id and push to database
-                        //mDatabaseReference.push().setValue(msg);
                         pushMessage(msg);
                     }
                 });

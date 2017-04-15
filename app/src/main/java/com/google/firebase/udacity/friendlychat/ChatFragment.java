@@ -37,7 +37,7 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
 
     public static final String TAG = "ChatFragment";
 
-    public static final int RC_SIGN_IN = 1;
+    private static final int RC_SIGN_IN = 1;
     private static final int RC_PHOTO_PICKER = 2;
 
     private ListView mMessageListView;
@@ -121,6 +121,7 @@ public class ChatFragment extends Fragment implements IRepository.RepositoryList
 
             public void afterTextChanged(Editable editable) { }
         });
+        //TODO: remove reference to Repository
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(Repository.DEFAULT_MSG_LENGTH_LIMIT)});
 
         // Send button sends a message and clears the EditText
