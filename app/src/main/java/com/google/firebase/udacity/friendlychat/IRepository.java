@@ -1,7 +1,5 @@
 package com.google.firebase.udacity.friendlychat;
 
-import com.google.firebase.database.ChildEventListener;
-
 import android.net.Uri;
 
 /**

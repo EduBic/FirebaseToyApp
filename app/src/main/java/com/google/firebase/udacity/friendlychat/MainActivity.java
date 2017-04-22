@@ -23,7 +23,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private IRepository mRepository;
     private IPresenter mPresenter;
 
     @Override
@@ -41,10 +40,6 @@ public class MainActivity extends AppCompatActivity {
             transaction.commit();
         }
 
-        mRepository = new Repository();
-        //mRepository.setViewListener(chatFragment);
-        //chatFragment.setRepository(mRepository);
-
-        mPresenter = new ChatPresenter(mRepository, chatFragment);
+        mPresenter = new ChatPresenter(new Repository(), chatFragment);
     }
 }
