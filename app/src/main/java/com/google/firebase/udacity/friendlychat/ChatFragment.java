@@ -127,7 +127,7 @@ public class ChatFragment extends Fragment implements IView {
 
             public void afterTextChanged(Editable editable) { }
         });
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(IRepository.DEFAULT_MSG_LENGTH_LIMIT)});
+        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(IDatabase.DEFAULT_MSG_LENGTH_LIMIT)});
 
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {

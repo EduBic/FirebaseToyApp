@@ -6,17 +6,17 @@ import android.net.Uri;
  * Created by Eduard on 15/04/2017.
  */
 
-public class ChatPresenter implements IPresenter, Repository.RepositoryListener {
+public class ChatPresenter implements IPresenter, IDatabase.NetworkDatabaseListener {
 
-    private IRepository mRepository;
+    private IDatabase mRepository;
 
     private IView mView;
 
-    public ChatPresenter(IRepository repository, IView view) {
+    public ChatPresenter(IDatabase repository, IView view) {
         mRepository = repository;
         mView = view;
 
-        // attach to Fragment and Repository
+        // attach to Fragment and NetworkDatabase
         mView.setPresenter(this);
         mRepository.addListener(this);
     }

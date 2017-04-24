@@ -40,6 +40,6 @@ public class MainActivity extends AppCompatActivity {
             transaction.commit();
         }
 
-        mPresenter = new ChatPresenter(new Repository(), chatFragment);
+        mPresenter = new ChatPresenter(new NetworkDatabase(), chatFragment);
     }
 }
